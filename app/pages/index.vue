@@ -71,30 +71,6 @@
 </template>
 
 <script setup lang="ts">
-interface Book {
-  id: number
-  title: string
-  author: string
-  genre: string
-  isbn: string
-  createdAt: string
-}
-
-interface Patron {
-  id: number
-  name: string
-  contactDetails: string
-  membershipId: string
-  createdAt: string
-}
-
-interface Transaction {
-  id: number
-  bookId: number
-  patronId: number
-  loanDate: string
-  returnDate: string | null
-}
 
 const { data: books } = await useFetch<Book[]>('/api/books', { lazy: true })
 const { data: patrons } = await useFetch<Patron[]>('/api/patrons', { lazy: true })

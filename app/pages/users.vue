@@ -1,22 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 
-interface Patron {
-    id: number
-    name: string
-    contactDetails: string
-    membershipId: string
-    createdAt: string
-}
-
-interface Transaction {
-    id: number
-    bookId: number
-    patronId: number
-    loanDate: string
-    returnDate: string | null
-}
-
 const toast = useToast()
 const table = useTemplateRef('table')
 const selectedPatron = ref<Patron | null>(null)
@@ -37,7 +21,8 @@ const getPatronActions = (patron: Patron) => {
             async onSelect() {
                 selectedPatron.value = patron
                 try {
-                    patronTransactions.value = await $fetch(`/api/transactions/patron/${patron.id}`)
+                    const url: string = `/api/transactions/patron/${patron.id}`
+                    patronTransactions.value = await $fetch<Transaction[]>(url)
                     showTransactionHistory.value = true
                 } catch (error) {
                     toast.add({
@@ -55,7 +40,7 @@ const getPatronActions = (patron: Patron) => {
                 selectedPatron.value = patron
                 try {
                     const transactions = await $fetch(`/api/transactions/patron/${patron.id}`)
-                    const activeLoans = transactions.filter((t: Transaction) => !t.returnDate)
+                    const activeLoans = transactions.filter((t) => !t.returnDate)
 
                     if (activeLoans.length === 0) {
                         toast.add({
@@ -66,7 +51,7 @@ const getPatronActions = (patron: Patron) => {
                     }
 
                     currentBooks.value = await Promise.all(
-                        activeLoans.map(async (loan: Transaction) => {
+                        activeLoans.map(async (loan) => {
                             const books = await $fetch('/api/books')
                             return books.find((b: any) => b.id === loan.bookId)
                         })

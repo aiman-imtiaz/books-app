@@ -9,7 +9,7 @@ export default defineNuxtConfig({
   ],
 
   devtools: {
-    enabled: false
+    enabled: true
   },
   css: ['~/assets/css/main.css'],
 
@@ -18,6 +18,12 @@ export default defineNuxtConfig({
   },
 
   compatibilityDate: '2026-07-27',
+
+  nitro: {
+    experimental: {
+      tasks: true
+    }
+  },
 
   eslint: {
     config: {

@@ -1,15 +1,6 @@
 <script setup lang="ts">
 import type { TableColumn } from '@nuxt/ui'
 
-interface Book {
-    id: number
-    title: string
-    author: string
-    genre: string
-    isbn: string
-    createdAt: string
-}
-
 const toast = useToast()
 const showAddForm = ref(false)
 const title = ref('')
