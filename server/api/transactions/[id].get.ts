@@ -3,22 +3,22 @@ import { db, schema } from '@nuxthub/db'
 import { eq } from 'drizzle-orm'
 
 const ParamsSchema = z.object({
-    id: z.coerce.number().int()
+  id: z.coerce.number().int()
 })
 
 export default eventHandler(async (event) => {
-    const { id } = await getValidatedRouterParams(event, ParamsSchema.parse)
-    // Get a specific transaction
-    const transactions = await db.select().from(schema.transactions).where(
-        eq(schema.transactions.id, id)
-    )
+  const { id } = await getValidatedRouterParams(event, ParamsSchema.parse)
+  // Get a specific transaction
+  const transactions = await db.select().from(schema.transactions).where(
+    eq(schema.transactions.id, id)
+  )
 
-    const transaction = transactions[0]
-    if (!transaction) {
-        throw createError({
-            statusCode: 404,
-            message: 'Transaction not found'
-        })
-    }
-    return transaction
+  const transaction = transactions[0]
+  if (!transaction) {
+    throw createError({
+      statusCode: 404,
+      message: 'Transaction not found'
+    })
+  }
+  return transaction
 })

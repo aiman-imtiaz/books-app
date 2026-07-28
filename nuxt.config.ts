@@ -13,16 +13,16 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/main.css'],
 
-  hub: {
-    db: 'postgresql'
-  },
-
   compatibilityDate: '2026-07-27',
 
   nitro: {
     experimental: {
       tasks: true
     }
+  },
+
+  hub: {
+    db: 'postgresql'
   },
 
   eslint: {

@@ -1,4 +1,4 @@
-import { books, patrons, transactions } from '@nuxthub/db/schema'
+import type { books, patrons, transactions } from '@nuxthub/db/schema'
 
 // Select types (for reading data)
 export type Book = typeof books.$inferSelect

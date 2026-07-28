@@ -6,6 +6,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "preview": "npx nuxthub preview",
+    "lint:fix": "eslint . --fix",
     "db:generate": "drizzle-kit generate",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
