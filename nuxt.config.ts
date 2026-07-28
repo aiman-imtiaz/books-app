@@ -1,0 +1,30 @@
+// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig({
+  modules: [
+    '@nuxt/ui',
+    '@nuxt/eslint',
+    '@nuxthub/core',
+    '@pinia/nuxt',
+    '@pinia/colada-nuxt'
+  ],
+
+  devtools: {
+    enabled: false
+  },
+  css: ['~/assets/css/main.css'],
+
+  hub: {
+    db: 'postgresql'
+  },
+
+  compatibilityDate: '2026-07-27',
+
+  eslint: {
+    config: {
+      stylistic: {
+        quotes: 'single',
+        commaDangle: 'never'
+      }
+    }
+  }
+})
