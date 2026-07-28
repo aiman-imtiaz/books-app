@@ -8,9 +8,6 @@ A library management application built with Nuxt, PostgreSQL, and Drizzle ORM fo
 - 👥 Patron management with membership IDs
 - 📋 Loan and return transaction tracking
 - 📊 Transaction history by book or patron
-- 🎨 Clean, modern UI with Nuxt UI
-- 🗄️ PostgreSQL database with Drizzle ORM
-- ✅ Type-safe API with Zod validation
 
 ## Tech Stack
 
@@ -27,7 +24,25 @@ A library management application built with Nuxt, PostgreSQL, and Drizzle ORM fo
 - Node.js 18+ and pnpm
 - PostgreSQL database running locally or remotely
 
-### Installation
+### Installation - Basic
+
+If no database is provided, NuxtHub uses Drizzle ORM to generate PGLite (embedded PostgreSQL).
+
+1. Clone the repository and install dependencies:
+```bash
+pnpm install
+```
+
+2. Apply migrations and start the development server:
+```bash
+pnpm dev
+```
+
+The application will be available at `http://localhost:3000`
+
+### Installation - Advanced
+
+Setup your own database.
 
 1. Clone the repository and install dependencies:
 ```bash
@@ -44,10 +59,9 @@ docker run --name books-db \
   -d postgres:latest
 ```
 
-3. Create a `.env` file with your database URL:
+3. Edit `.env` and set `DATABASE_URL` to your PostgreSQL connection string. `.env.example` already contains the URL that would be generated if the command in Step 2 is ran as is, which means you can just copy that into `.env`:
 ```bash
 cp .env.example .env
-# Edit .env and set DATABASE_URL to your PostgreSQL connection string
 ```
 
 4. Generate database migrations:
@@ -80,7 +94,6 @@ The application will be available at `http://localhost:3000`
 │       ├── schema.ts        # Database schema
 │       ├── index.ts         # Database connection
 │       └── migrations/      # Auto-generated migrations
-├── drizzle.config.ts        # Drizzle ORM configuration
 └── nuxt.config.ts           # Nuxt configuration
 ```
 
@@ -145,18 +158,6 @@ pnpm typecheck
 pnpm lint
 ```
 
-## License
-
-MIT
-
-```bash [Terminal]
-npm create nuxt@latest -- -t ui
-```
-
-## Deploy your own
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-name=starter&repository-url=https%3A%2F%2Fgithub.com%2Fnuxt-ui-templates%2Fstarter&demo-image=https%3A%2F%2Fui.nuxt.com%2Fassets%2Ftemplates%2Fnuxt%2Fstarter-dark.png&demo-url=https%3A%2F%2Fstarter-template.nuxt.dev%2F&demo-title=Nuxt%20Starter%20Template&demo-description=A%20minimal%20template%20to%20get%20started%20with%20Nuxt%20UI.)
-
 ## Setup
 
 Make sure to install the dependencies:
@@ -187,8 +188,3 @@ Locally preview production build:
 pnpm preview
 ```
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
-
-## Renovate integration
-
-Install [Renovate GitHub app](https://github.com/apps/renovate/installations/select_target) on your repository and you are good to go.

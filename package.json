@@ -7,7 +7,7 @@
     "dev": "nuxt dev",
     "preview": "npx nuxthub preview",
     "lint:fix": "eslint . --fix",
-    "db:generate": "drizzle-kit generate",
+    "db:generate": "npx nuxt db generate",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "typecheck": "nuxt typecheck"
