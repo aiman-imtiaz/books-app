@@ -73,38 +73,10 @@ const getPatronActions = (patron: Patron) => {
 }
 
 const columns: TableColumn<Patron>[] = [
-  {
-    accessorKey: 'name',
-    header: 'Name'
-  },
-  {
-    accessorKey: 'membershipId',
-    header: 'Membership ID'
-  },
-  {
-    accessorKey: 'contactDetails',
-    header: 'Contact Details'
-  },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'flex justify-end' },
-        h('UDropdownMenu', {
-          items: getPatronActions(row.original),
-          content: { align: 'end' }
-        }, () =>
-          h('UButton', {
-            icon: 'i-lucide-ellipsis-vertical',
-            color: 'neutral',
-            variant: 'ghost'
-          })
-        )
-      )
-    }
-  }
+  { accessorKey: 'name', header: 'Name' },
+  { accessorKey: 'membershipId', header: 'Membership ID' },
+  { accessorKey: 'contactDetails', header: 'Contact Details' },
+  { id: 'actions', header: 'Actions' }
 ]
 </script>
 
@@ -133,6 +105,21 @@ const columns: TableColumn<Patron>[] = [
             td: 'px-4 py-3 text-sm'
           }"
         >
+          <template #actions-cell="{ row }">
+            <div class="flex justify-end">
+              <UDropdownMenu
+                :items="getPatronActions(row.original)"
+                :content="{ align: 'end' }"
+              >
+                <UButton
+                  icon="i-lucide-ellipsis-vertical"
+                  color="neutral"
+                  variant="ghost"
+                />
+              </UDropdownMenu>
+            </div>
+          </template>
+
           <template #empty>
             <div class="flex flex-col items-center justify-center py-12 text-center">
               <p class="text-slate-600 mb-2">

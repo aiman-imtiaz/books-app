@@ -15,58 +15,11 @@ const { data: books, status, refresh } = await useFetch<Book[]>('/api/books', {
 })
 
 const columns: TableColumn<Book>[] = [
-  {
-    accessorKey: 'title',
-    header: 'Title'
-  },
-  {
-    accessorKey: 'author',
-    header: 'Author'
-  },
-  {
-    accessorKey: 'genre',
-    header: 'Genre'
-  },
-  {
-    accessorKey: 'isbn',
-    header: 'ISBN'
-  },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'flex justify-end gap-2' },
-        h('UButton', {
-          icon: 'i-lucide-trash',
-          color: 'error',
-          variant: 'soft',
-          async onClick() {
-            try {
-              await $fetch(`/api/books/${row.original.id}`, {
-                method: 'DELETE'
-              })
-              toast.add({
-                title: 'Success',
-                description: `Book "${row.original.title}" removed successfully`,
-                color: 'success'
-              })
-              await refresh()
-            }
-            catch (error) {
-              console.error(error)
-              toast.add({
-                title: 'Error',
-                description: 'Failed to delete book',
-                color: 'error'
-              })
-            }
-          }
-        })
-      )
-    }
-  }
+  { accessorKey: 'title', header: 'Title' },
+  { accessorKey: 'author', header: 'Author' },
+  { accessorKey: 'genre', header: 'Genre' },
+  { accessorKey: 'isbn', header: 'ISBN' },
+  { id: 'actions', header: 'Actions' } // no `cell` fn needed
 ]
 
 const addBook = async () => {
@@ -116,6 +69,18 @@ const addBook = async () => {
     isLoading.value = false
   }
 }
+
+const deleteBook = async (book: Book) => {
+  try {
+    await $fetch(`/api/books/${book.id}`, { method: 'DELETE' })
+    toast.add({ title: 'Success', description: `Book "${book.title}" removed successfully`, color: 'success' })
+    await refresh()
+  }
+  catch (error) {
+    console.error(error)
+    toast.add({ title: 'Error', description: 'Failed to delete book', color: 'error' })
+  }
+}
 </script>
 
 <template>
@@ -153,6 +118,17 @@ const addBook = async () => {
             td: 'px-4 py-3 text-sm'
           }"
         >
+          <template #actions-cell="{ row }">
+            <div class="flex justify-end gap-2">
+              <UButton
+                icon="i-lucide-trash"
+                color="error"
+                variant="soft"
+                @click="deleteBook(row.original)"
+              />
+            </div>
+          </template>
+
           <template #empty>
             <div class="flex flex-col items-center justify-center py-12 text-center">
               <p class="text-slate-600 mb-2">
