@@ -84,144 +84,145 @@ const deleteBook = async (book: Book) => {
 </script>
 
 <template>
-  <div>
-    <UDashboardPanel id="books">
-      <template #header>
-        <UDashboardNavbar title="Books">
-          <template #leading>
-            <UDashboardSidebarCollapse />
-          </template>
+  <UDashboardPanel id="books">
+    <template #header>
+      <UDashboardNavbar
+        title="Books"
+        :ui="{ right: 'gap-3' }"
+      >
+        <template #leading>
+          <UDashboardSidebarCollapse />
+        </template>
 
-          <template #right>
+        <template #right>
+          <UButton
+            icon="i-lucide-plus"
+            size="lg"
+            @click="showAddForm = true"
+          >
+            Add Book
+          </UButton>
+        </template>
+      </UDashboardNavbar>
+    </template>
+
+    <template #body>
+      <UTable
+        ref="table"
+        :data="books || []"
+        :columns="columns"
+        :loading="status === 'pending'"
+        class="w-full"
+        :ui="{
+          base: 'relative overflow-x-auto border border-default rounded-lg',
+          thead: 'bg-elevated/50',
+          th: 'px-4 py-2 text-left text-sm font-semibold',
+          td: 'px-4 py-3 text-sm'
+        }"
+      >
+        <template #actions-cell="{ row }">
+          <div class="flex justify-end gap-2">
+            <UButton
+              icon="i-lucide-trash"
+              color="error"
+              variant="soft"
+              @click="deleteBook(row.original)"
+            />
+          </div>
+        </template>
+
+        <template #empty>
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <p class="text-slate-600 mb-2">
+              No books in the collection yet.
+            </p>
             <UButton
               icon="i-lucide-plus"
-              size="lg"
               @click="showAddForm = true"
             >
-              Add Book
-            </UButton>
-          </template>
-        </UDashboardNavbar>
-      </template>
-
-      <template #body>
-        <UTable
-          ref="table"
-          :data="books || []"
-          :columns="columns"
-          :loading="status === 'pending'"
-          class="w-full"
-          :ui="{
-            base: 'relative overflow-x-auto border border-default rounded-lg',
-            thead: 'bg-elevated/50',
-            th: 'px-4 py-2 text-left text-sm font-semibold',
-            td: 'px-4 py-3 text-sm'
-          }"
-        >
-          <template #actions-cell="{ row }">
-            <div class="flex justify-end gap-2">
-              <UButton
-                icon="i-lucide-trash"
-                color="error"
-                variant="soft"
-                @click="deleteBook(row.original)"
-              />
-            </div>
-          </template>
-
-          <template #empty>
-            <div class="flex flex-col items-center justify-center py-12 text-center">
-              <p class="text-slate-600 mb-2">
-                No books in the collection yet.
-              </p>
-              <UButton
-                icon="i-lucide-plus"
-                @click="showAddForm = true"
-              >
-                Add Your First Book
-              </UButton>
-            </div>
-          </template>
-        </UTable>
-      </template>
-    </UDashboardPanel>
-
-    <!-- Add Book Modal -->
-    <UModal
-      v-model:open="showAddForm"
-      title="Add New Book"
-      description="Add a new book to your collection"
-    >
-      <template #body>
-        <form
-          class="space-y-4"
-          @submit.prevent="addBook"
-        >
-          <div>
-            <label class="block text-sm font-medium text-slate-900 mb-1">Title</label>
-            <input
-              v-model="title"
-              type="text"
-              placeholder="Book title"
-              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              required
-            >
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-900 mb-1">Author</label>
-            <input
-              v-model="author"
-              type="text"
-              placeholder="Author name"
-              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              required
-            >
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-900 mb-1">Genre</label>
-            <input
-              v-model="genre"
-              type="text"
-              placeholder="Book genre"
-              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              required
-            >
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-slate-900 mb-1">ISBN</label>
-            <input
-              v-model="isbn"
-              type="text"
-              placeholder="ISBN number"
-              class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-              required
-            >
-          </div>
-
-          <div class="flex gap-2 pt-4">
-            <UButton
-              type="button"
-              color="neutral"
-              variant="soft"
-              class="flex-1"
-              @click="showAddForm = false"
-            >
-              Cancel
-            </UButton>
-            <UButton
-              type="submit"
-              class="flex-1"
-              :loading="isLoading"
-              :disabled="isLoading"
-            >
-              Add Book
+              Add Your First Book
             </UButton>
           </div>
-        </form>
-      </template>
-    </UModal>
-  </div>
+        </template>
+      </UTable>
+    </template>
+  </UDashboardPanel>
+
+  <!-- Add Book Modal -->
+  <UModal
+    v-model:open="showAddForm"
+    title="Add New Book"
+    description="Add a new book to your collection"
+  >
+    <template #body>
+      <form
+        class="space-y-4"
+        @submit.prevent="addBook"
+      >
+        <div>
+          <label class="block text-sm font-medium text-slate-900 mb-1">Title</label>
+          <input
+            v-model="title"
+            type="text"
+            placeholder="Book title"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            required
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-900 mb-1">Author</label>
+          <input
+            v-model="author"
+            type="text"
+            placeholder="Author name"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            required
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-900 mb-1">Genre</label>
+          <input
+            v-model="genre"
+            type="text"
+            placeholder="Book genre"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            required
+          >
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-900 mb-1">ISBN</label>
+          <input
+            v-model="isbn"
+            type="text"
+            placeholder="ISBN number"
+            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
+            required
+          >
+        </div>
+
+        <div class="flex gap-2 pt-4">
+          <UButton
+            type="button"
+            color="neutral"
+            variant="soft"
+            class="flex-1"
+            @click="showAddForm = false"
+          >
+            Cancel
+          </UButton>
+          <UButton
+            type="submit"
+            class="flex-1"
+            :loading="isLoading"
+            :disabled="isLoading"
+          >
+            Add Book
+          </UButton>
+        </div>
+      </form>
+    </template>
+  </UModal>
 </template>
