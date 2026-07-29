@@ -76,7 +76,7 @@ const columns: TableColumn<Patron>[] = [
   { accessorKey: 'name', header: 'Name' },
   { accessorKey: 'membershipId', header: 'Membership ID' },
   { accessorKey: 'contactDetails', header: 'Contact Details' },
-  { id: 'actions', header: 'Actions' }
+  { id: 'actions', header: '' }
 ]
 </script>
 
