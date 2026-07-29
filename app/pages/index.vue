@@ -1,9 +1,23 @@
 <template>
   <UDashboardPanel id="home">
     <template #header>
+      <div class="flex items-center border-b border-default px-4 py-2">
+        <NuxtLink
+          to="/"
+          class="flex items-center gap-2"
+        >
+          <UIcon
+            name="i-lucide-library"
+            class="size-5 text-primary"
+          />
+          <span class="font-semibold text-highlighted">
+            Read and Let Read
+          </span>
+        </NuxtLink>
+      </div>
       <UDashboardNavbar
         title="Home"
-        :ui="{ right: 'gap-3' }"
+        :ui="{ root: 'border-b-0', right: 'gap-3' }"
       >
         <template #leading>
           <UDashboardSidebarCollapse />
@@ -16,6 +30,13 @@
     </template>
 
     <template #body>
+      <div class="mb-8">
+        <p class="text-lg text-muted">
+          <span class="font-bold text-highlighted">Read and Let Read.</span>
+          Manage your library here.
+        </p>
+      </div>
+
       <div class="grid gap-6">
         <!-- Books Summary -->
         <UCard>

@@ -288,9 +288,23 @@ const returnBook = async (transactionId: number) => {
 <template>
   <UDashboardPanel id="books">
     <template #header>
+      <div class="flex items-center border-b border-default px-4 py-2">
+        <NuxtLink
+          to="/"
+          class="flex items-center gap-2"
+        >
+          <UIcon
+            name="i-lucide-library"
+            class="size-5 text-primary"
+          />
+          <span class="font-semibold text-highlighted">
+            Read and Let Read
+          </span>
+        </NuxtLink>
+      </div>
       <UDashboardNavbar
         title="Books"
-        :ui="{ right: 'gap-3' }"
+        :ui="{ root: 'border-b-0', right: 'gap-3' }"
       >
         <template #leading>
           <UDashboardSidebarCollapse />

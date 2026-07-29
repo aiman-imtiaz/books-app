@@ -37,6 +37,24 @@ const links = [[{
       class="bg-elevated/25"
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
+      <template #header="{ collapsed }">
+        <NuxtLink
+          to="/"
+          class="flex items-center gap-2 px-1 py-1"
+        >
+          <UIcon
+            name="i-lucide-library"
+            class="size-5 text-primary shrink-0"
+          />
+          <span
+            v-if="!collapsed"
+            class="font-semibold text-highlighted truncate"
+          >
+            Read and Let Read
+          </span>
+        </NuxtLink>
+      </template>
+
       <template #default="{ collapsed }">
         <UNavigationMenu
           :collapsed="collapsed"
