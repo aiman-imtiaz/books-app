@@ -32,7 +32,7 @@ If no database is provided, [NuxtHub uses Drizzle ORM to generate PGLite (embedd
 pnpm install
 ```
 
-2. Start the development server:
+2. Run database migrations:
 ```bash
 pnpm db:generate
 ```
