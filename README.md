@@ -22,9 +22,8 @@ A library management application built with Nuxt, PostgreSQL, and Drizzle ORM fo
 ### Prerequisites
 
 - Node.js 18+ and pnpm
-- PostgreSQL database running locally or remotely
 
-### Installation - Basic
+### Installation
 
 If no database is provided, NuxtHub uses Drizzle ORM to generate PGLite (embedded PostgreSQL).
 
@@ -40,9 +39,13 @@ pnpm dev
 
 The application will be available at `http://localhost:3000`
 
+<details>
+
+<summary> <b><u><font size="+1">Advanced - Provide your own database URL</font></u></b></summary>
+
 ### Installation - Advanced
 
-Setup your own database.
+Setup your own database. Refer to [https://orm.drizzle.team/docs/guides/postgresql-local-setup](https://orm.drizzle.team/docs/guides/postgresql-local-setup).
 
 1. Clone the repository and install dependencies:
 ```bash
@@ -75,6 +78,7 @@ pnpm dev
 ```
 
 The application will be available at `http://localhost:3000`
+</details>
 
 ## Project Structure
 
