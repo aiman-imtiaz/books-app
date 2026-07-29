@@ -39,6 +39,13 @@ pnpm dev
 
 The application will be available at `http://localhost:3000`
 
+3. [OPTIONAL] Seed the database with some dummy data to play around:
+   - Press <kbd>Shift</kbd> + <kbd>Option</kbd> + <kbd>D</kbd> in the browser to open dev tools.
+   - Toggle to the **Tasks** tab, and you'll see `seed` in the list of tasks. Run it to populate the database.
+   - Press <kbd>Shift</kbd> + <kbd>Option</kbd> + <kbd>D</kbd> again to close dev tools.
+
+<img width="1032" height="832" alt="Image" src="https://github.com/user-attachments/assets/aadd6f05-7148-4d31-8576-8135ec464990" />
+
 <details>
 
 <summary> <b><u><font size="+1">Advanced - Provide your own database URL</font></u></b></summary>
