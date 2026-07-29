@@ -34,12 +34,17 @@ pnpm install
 
 2. Start the development server:
 ```bash
+pnpm db:generate
+```
+
+3. Start the development server:
+```bash
 pnpm dev
 ```
 
 The application will be available at `http://localhost:3000`
 
-3. [OPTIONAL] Seed the database with some dummy data to play around:
+4. [OPTIONAL] Seed the database with some dummy data to play around:
    - Press <kbd>Shift</kbd> + <kbd>Option</kbd> + <kbd>D</kbd> in the browser to open dev tools.
    - Toggle to the **Tasks** tab, and you'll see `seed` in the list of tasks. Run it to populate the database.
    - Press <kbd>Shift</kbd> + <kbd>Option</kbd> + <kbd>D</kbd> again to close dev tools.
