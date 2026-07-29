@@ -8,6 +8,10 @@
         <template #leading>
           <UDashboardSidebarCollapse />
         </template>
+
+        <template #right>
+          <UColorModeButton />
+        </template>
       </UDashboardNavbar>
     </template>
 
@@ -16,19 +20,9 @@
         <!-- Books Summary -->
         <UCard>
           <template #header>
-            <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold">
-                Books in Library
-              </h2>
-              <NuxtLink to="/books">
-                <UButton
-                  icon="i-lucide-arrow-right"
-                  size="sm"
-                  color="neutral"
-                  variant="ghost"
-                />
-              </NuxtLink>
-            </div>
+            <h2 class="text-lg font-semibold">
+              Books in Library
+            </h2>
           </template>
 
           <div class="flex items-center justify-between">
@@ -36,35 +30,24 @@
               <p class="text-3xl font-bold">
                 {{ bookCount }}
               </p>
-              <p class="text-sm text-slate-600">
+              <p class="text-sm text-muted">
                 Total books in collection
               </p>
             </div>
-            <NuxtLink to="/books">
-              <UButton
-                icon="i-lucide-book"
-                label="Manage Books"
-              />
-            </NuxtLink>
+            <UButton
+              to="/books"
+              icon="i-lucide-book"
+              label="Manage Books"
+            />
           </div>
         </UCard>
 
         <!-- Patrons Summary -->
         <UCard>
           <template #header>
-            <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold">
-                Library Patrons
-              </h2>
-              <NuxtLink to="/users">
-                <UButton
-                  icon="i-lucide-arrow-right"
-                  size="sm"
-                  color="neutral"
-                  variant="ghost"
-                />
-              </NuxtLink>
-            </div>
+            <h2 class="text-lg font-semibold">
+              Library Patrons
+            </h2>
           </template>
 
           <div class="flex items-center justify-between">
@@ -72,16 +55,15 @@
               <p class="text-3xl font-bold">
                 {{ patronCount }}
               </p>
-              <p class="text-sm text-slate-600">
+              <p class="text-sm text-muted">
                 Active library members
               </p>
             </div>
-            <NuxtLink to="/users">
-              <UButton
-                icon="i-lucide-users"
-                label="Manage Patrons"
-              />
-            </NuxtLink>
+            <UButton
+              to="/users"
+              icon="i-lucide-users"
+              label="Manage Patrons"
+            />
           </div>
         </UCard>
 
@@ -91,7 +73,7 @@
             <h2 class="text-lg font-semibold">
               Active Loans
             </h2>
-            <p class="text-sm text-slate-600">
+            <p class="text-sm text-muted">
               {{ activeLoans }} books currently on loan
             </p>
           </template>
@@ -112,23 +94,13 @@
               {{ new Date(row.original.loanDate).toLocaleDateString() }}
             </template>
 
-            <template #actions-cell="{ row }">
-              <div class="flex justify-end">
-                <UButton
-                  label="Return"
-                  icon="i-lucide-corner-up-left"
-                  size="sm"
-                  color="neutral"
-                  variant="soft"
-                  :loading="returningId === row.original.id"
-                  @click="returnBook(row.original.id)"
-                />
-              </div>
+            <template #daysOnLoan-cell="{ row }">
+              {{ daysSinceLoan(row.original.loanDate) }}
             </template>
 
             <template #empty>
               <div class="flex flex-col items-center justify-center py-12 text-center">
-                <p class="text-slate-600">
+                <p class="text-muted">
                   No books currently on loan.
                 </p>
               </div>
@@ -150,11 +122,9 @@ interface ActiveLoanRow {
   loanDate: Date
 }
 
-const toast = useToast()
-
 const { data: books } = await useFetch<Book[]>('/api/books', { lazy: true })
 const { data: patrons } = await useFetch<Patron[]>('/api/patrons', { lazy: true })
-const { data: transactions, status: transactionsStatus, refresh: refreshTransactions }
+const { data: transactions, status: transactionsStatus }
   = await useFetch<Transaction[]>('/api/transactions', { lazy: true })
 
 const bookCount = computed(() => books.value?.length ?? 0)
@@ -181,34 +151,16 @@ const loanColumns: TableColumn<ActiveLoanRow>[] = [
   { accessorKey: 'bookTitle', header: 'Book' },
   { accessorKey: 'patronName', header: 'Patron' },
   { id: 'loanDate', header: 'Loan Date' },
-  { id: 'actions', header: '' }
+  { id: 'daysOnLoan', header: 'Days on Loan' }
 ]
 
-const returningId = ref<number | null>(null)
-
-const returnBook = async (transactionId: number) => {
-  returningId.value = transactionId
-  try {
-    await $fetch(`/api/transactions/return/${transactionId}`, {
-      method: 'PATCH'
-    })
-    toast.add({
-      title: 'Success',
-      description: 'Book marked as returned',
-      color: 'success'
-    })
-    await refreshTransactions()
-  }
-  catch (error) {
-    console.error(error)
-    toast.add({
-      title: 'Error',
-      description: 'Failed to return book',
-      color: 'error'
-    })
-  }
-  finally {
-    returningId.value = null
-  }
+const daysSinceLoan = (loanDate: Date | string) => {
+  const loaned = new Date(loanDate)
+  const now = new Date()
+  const msPerDay = 1000 * 60 * 60 * 24
+  // Zero out time components so partial days still count as whole days elapsed
+  const loanedMidnight = new Date(loaned.getFullYear(), loaned.getMonth(), loaned.getDate())
+  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.max(0, Math.round((nowMidnight.getTime() - loanedMidnight.getTime()) / msPerDay))
 }
 </script>

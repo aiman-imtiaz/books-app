@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 
 const toast = useToast()
 const showAddForm = ref(false)
@@ -10,16 +10,108 @@ const isbn = ref('')
 const isLoading = ref(false)
 const table = useTemplateRef('table')
 
+const showLoanForm = ref(false)
+const selectedBookForLoan = ref<Book | null>(null)
+const loanMembershipId = ref('')
+const isLoaningBook = ref(false)
+
+const showBookHistory = ref(false)
+const selectedBookForHistory = ref<Book | null>(null)
+const bookHistoryTransactions = ref<Transaction[]>([])
+
+const showLoanDetails = ref(false)
+const selectedBookForLoanDetails = ref<Book | null>(null)
+
 const { data: books, status, refresh } = await useFetch<Book[]>('/api/books', {
   lazy: true
 })
+const { data: patrons, refresh: refreshPatrons } = await useFetch<Patron[]>('/api/patrons', { lazy: true })
+const { data: transactions, refresh: refreshTransactions } = await useFetch<Transaction[]>('/api/transactions', { lazy: true })
+
+const loanedBookIds = computed(() => {
+  return new Set((transactions.value ?? []).filter(t => !t.returnDate).map(t => t.bookId))
+})
+
+const isBookAvailable = (bookId: number) => !loanedBookIds.value.has(bookId)
+
+const getActiveTransactionId = (bookId: number) => {
+  return (transactions.value ?? []).find(t => t.bookId === bookId && !t.returnDate)?.id
+}
+
+const getActiveTransaction = (bookId: number) => {
+  return (transactions.value ?? []).find(t => t.bookId === bookId && !t.returnDate)
+}
+
+const daysSinceLoan = (loanDate: Date | string) => {
+  const loaned = new Date(loanDate)
+  const now = new Date()
+  const msPerDay = 1000 * 60 * 60 * 24
+  const loanedMidnight = new Date(loaned.getFullYear(), loaned.getMonth(), loaned.getDate())
+  const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.max(0, Math.round((nowMidnight.getTime() - loanedMidnight.getTime()) / msPerDay))
+}
+
+const openLoanDetails = async (book: Book) => {
+  selectedBookForLoanDetails.value = book
+  if (!patrons.value || patrons.value.length === 0) {
+    await refreshPatrons()
+  }
+  showLoanDetails.value = true
+}
+
+const returningId = ref<number | null>(null)
+
+const loanModalDescription = computed(() => {
+  return selectedBookForLoan.value ? `Loan out "${selectedBookForLoan.value.title}"` : ''
+})
+
+const getPatronName = (patronId: number) => {
+  return patrons.value?.find(p => Number(p.id) === Number(patronId))?.name ?? 'Unknown patron'
+}
+
+const getBookActions = (book: Book): DropdownMenuItem[] => {
+  return [
+    {
+      label: 'View History',
+      icon: 'i-lucide-history',
+      async onSelect() {
+        selectedBookForHistory.value = book
+        try {
+          if (!patrons.value || patrons.value.length === 0) {
+            await refreshPatrons()
+          }
+          const url: string = `/api/transactions/book/${book.id}`
+          bookHistoryTransactions.value = await $fetch<Transaction[]>(url)
+          showBookHistory.value = true
+        }
+        catch (error) {
+          console.error(error)
+          toast.add({
+            title: 'Error',
+            description: 'Failed to load book history',
+            color: 'error'
+          })
+        }
+      }
+    },
+    {
+      label: 'Delete Book',
+      icon: 'i-lucide-trash',
+      color: 'error',
+      onSelect() {
+        deleteBook(book)
+      }
+    }
+  ]
+}
 
 const columns: TableColumn<Book>[] = [
   { accessorKey: 'title', header: 'Title' },
   { accessorKey: 'author', header: 'Author' },
   { accessorKey: 'genre', header: 'Genre' },
   { accessorKey: 'isbn', header: 'ISBN' },
-  { id: 'actions', header: 'Actions' } // no `cell` fn needed
+  { id: 'status', header: 'Status' },
+  { id: 'actions', header: '' }
 ]
 
 const addBook = async () => {
@@ -81,6 +173,98 @@ const deleteBook = async (book: Book) => {
     toast.add({ title: 'Error', description: 'Failed to delete book', color: 'error' })
   }
 }
+
+const openLoanModal = (book: Book) => {
+  selectedBookForLoan.value = book
+  loanMembershipId.value = ''
+  showLoanForm.value = true
+}
+
+const submitLoan = async () => {
+  if (!loanMembershipId.value.trim()) {
+    toast.add({
+      title: 'Validation Error',
+      description: 'Please enter a membership ID',
+      color: 'error'
+    })
+    return
+  }
+
+  if (!selectedBookForLoan.value) return
+
+  isLoaningBook.value = true
+  try {
+    if (!patrons.value || patrons.value.length === 0) {
+      await refreshPatrons()
+    }
+
+    const patron = patrons.value?.find(p => p.membershipId === loanMembershipId.value.trim())
+    if (!patron) {
+      toast.add({
+        title: 'Error',
+        description: 'No patron found with that membership ID',
+        color: 'error'
+      })
+      return
+    }
+
+    await $fetch('/api/transactions/loan', {
+      method: 'POST',
+      body: {
+        bookId: selectedBookForLoan.value.id,
+        patronId: patron.id
+      }
+    })
+
+    toast.add({
+      title: 'Success',
+      description: `"${selectedBookForLoan.value.title}" loaned to ${patron.name}`,
+      color: 'success'
+    })
+
+    showLoanForm.value = false
+    loanMembershipId.value = ''
+    selectedBookForLoan.value = null
+    await refreshTransactions()
+  }
+  catch (error) {
+    console.error(error)
+    toast.add({
+      title: 'Error',
+      description: 'Failed to register loan',
+      color: 'error'
+    })
+  }
+  finally {
+    isLoaningBook.value = false
+  }
+}
+
+const returnBook = async (transactionId: number) => {
+  returningId.value = transactionId
+  try {
+    await $fetch(`/api/transactions/return/${transactionId}`, {
+      method: 'PATCH'
+    })
+    toast.add({
+      title: 'Success',
+      description: 'Book marked as returned',
+      color: 'success'
+    })
+    await refreshTransactions()
+  }
+  catch (error) {
+    console.error(error)
+    toast.add({
+      title: 'Error',
+      description: 'Failed to return book',
+      color: 'error'
+    })
+  }
+  finally {
+    returningId.value = null
+  }
+}
 </script>
 
 <template>
@@ -120,20 +304,60 @@ const deleteBook = async (book: Book) => {
           td: 'px-4 py-3 text-sm'
         }"
       >
+        <template #status-cell="{ row }">
+          <UBadge
+            v-if="isBookAvailable(row.original.id)"
+            label="Available"
+            color="success"
+            variant="subtle"
+          />
+          <UBadge
+            v-else
+            label="On Loan"
+            color="warning"
+            variant="subtle"
+            class="cursor-pointer"
+            @click="openLoanDetails(row.original)"
+          />
+        </template>
+
         <template #actions-cell="{ row }">
-          <div class="flex justify-end gap-2">
+          <div class="flex justify-end items-center gap-2">
             <UButton
-              icon="i-lucide-trash"
-              color="error"
+              v-if="isBookAvailable(row.original.id)"
+              label="Loan"
+              icon="i-lucide-book-plus"
+              size="sm"
+              color="neutral"
               variant="soft"
-              @click="deleteBook(row.original)"
+              @click="openLoanModal(row.original)"
             />
+            <UButton
+              v-else
+              label="Return"
+              icon="i-lucide-corner-up-left"
+              size="sm"
+              color="neutral"
+              variant="soft"
+              :loading="returningId === getActiveTransactionId(row.original.id)"
+              @click="returnBook(getActiveTransactionId(row.original.id)!)"
+            />
+            <UDropdownMenu
+              :items="getBookActions(row.original)"
+              :content="{ align: 'end' }"
+            >
+              <UButton
+                icon="i-lucide-ellipsis-vertical"
+                color="neutral"
+                variant="ghost"
+              />
+            </UDropdownMenu>
           </div>
         </template>
 
         <template #empty>
           <div class="flex flex-col items-center justify-center py-12 text-center">
-            <p class="text-slate-600 mb-2">
+            <p class="text-muted mb-2">
               No books in the collection yet.
             </p>
             <UButton
@@ -159,63 +383,69 @@ const deleteBook = async (book: Book) => {
         class="space-y-4"
         @submit.prevent="addBook"
       >
-        <div>
-          <label class="block text-sm font-medium text-slate-900 mb-1">Title</label>
-          <input
+        <UFormField
+          label="Title"
+          required
+        >
+          <UInput
             v-model="title"
-            type="text"
             placeholder="Book title"
-            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-            required
-          >
-        </div>
+            class="w-full"
+            size="lg"
+          />
+        </UFormField>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-900 mb-1">Author</label>
-          <input
+        <UFormField
+          label="Author"
+          required
+        >
+          <UInput
             v-model="author"
-            type="text"
             placeholder="Author name"
-            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-            required
-          >
-        </div>
+            class="w-full"
+            size="lg"
+          />
+        </UFormField>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-900 mb-1">Genre</label>
-          <input
+        <UFormField
+          label="Genre"
+          required
+        >
+          <UInput
             v-model="genre"
-            type="text"
             placeholder="Book genre"
-            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-            required
-          >
-        </div>
+            class="w-full"
+            size="lg"
+          />
+        </UFormField>
 
-        <div>
-          <label class="block text-sm font-medium text-slate-900 mb-1">ISBN</label>
-          <input
+        <UFormField
+          label="ISBN"
+          required
+        >
+          <UInput
             v-model="isbn"
-            type="text"
             placeholder="ISBN number"
-            class="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm shadow-sm outline-none transition focus:border-slate-500 focus:ring-2 focus:ring-slate-200"
-            required
-          >
-        </div>
+            class="w-full"
+            size="lg"
+          />
+        </UFormField>
 
         <div class="flex gap-2 pt-4">
           <UButton
             type="button"
             color="neutral"
             variant="soft"
-            class="flex-1"
+            size="lg"
+            class="flex-1 justify-center"
             @click="showAddForm = false"
           >
             Cancel
           </UButton>
           <UButton
             type="submit"
-            class="flex-1"
+            size="lg"
+            class="flex-1 justify-center"
             :loading="isLoading"
             :disabled="isLoading"
           >
@@ -223,6 +453,133 @@ const deleteBook = async (book: Book) => {
           </UButton>
         </div>
       </form>
+    </template>
+  </UModal>
+
+  <!-- Loan Book Modal -->
+  <UModal
+    v-model:open="showLoanForm"
+    title="Loan Book"
+    :description="loanModalDescription"
+  >
+    <template #body>
+      <form
+        class="space-y-4"
+        @submit.prevent="submitLoan"
+      >
+        <UFormField
+          label="Patron Membership ID"
+          required
+        >
+          <UInput
+            v-model="loanMembershipId"
+            placeholder="Enter membership ID"
+            class="w-full"
+            size="lg"
+          />
+        </UFormField>
+
+        <div class="flex gap-2 pt-4">
+          <UButton
+            type="button"
+            color="neutral"
+            variant="soft"
+            size="lg"
+            class="flex-1 justify-center"
+            :disabled="isLoaningBook"
+            @click="showLoanForm = false"
+          >
+            Cancel
+          </UButton>
+          <UButton
+            type="submit"
+            size="lg"
+            class="flex-1 justify-center"
+            :loading="isLoaningBook"
+            :disabled="isLoaningBook"
+          >
+            Confirm Loan
+          </UButton>
+        </div>
+      </form>
+    </template>
+  </UModal>
+
+  <!-- Book History Modal -->
+  <UModal
+    v-model:open="showBookHistory"
+    title="Loan History"
+    :description="`${selectedBookForHistory?.title} loan history`"
+  >
+    <template #body>
+      <div
+        v-if="bookHistoryTransactions.length === 0"
+        class="py-8 text-center text-dimmed"
+      >
+        No loan history found for this book.
+      </div>
+
+      <div
+        v-else
+        class="space-y-3 max-h-96 overflow-y-auto"
+      >
+        <div
+          v-for="transaction in bookHistoryTransactions"
+          :key="transaction.id"
+          class="rounded-lg border border-default p-4"
+        >
+          <p class="font-semibold text-highlighted">
+            {{ getPatronName(transaction.patronId) }}
+          </p>
+          <p class="text-sm text-muted">
+            Loan Date: {{ new Date(transaction.loanDate).toLocaleDateString() }}
+          </p>
+          <p
+            v-if="transaction.returnDate"
+            class="text-sm text-muted"
+          >
+            Return Date: {{ new Date(transaction.returnDate).toLocaleDateString() }}
+          </p>
+          <p
+            v-else
+            class="text-sm text-amber-500 dark:text-amber-400 font-medium"
+          >
+            Currently on loan
+          </p>
+        </div>
+      </div>
+    </template>
+  </UModal>
+
+  <!-- Loan Details Modal -->
+  <UModal
+    v-model:open="showLoanDetails"
+    title="Loan Details"
+    :description="`${selectedBookForLoanDetails?.title} is currently on loan`"
+  >
+    <template #body>
+      <div
+        v-if="selectedBookForLoanDetails && getActiveTransaction(selectedBookForLoanDetails.id)"
+        class="rounded-lg border border-default p-4 space-y-1"
+      >
+        <p class="font-semibold text-highlighted">
+          {{ getPatronName(getActiveTransaction(selectedBookForLoanDetails.id)!.patronId) }}
+        </p>
+        <p class="text-sm text-muted">
+          Loan Date: {{ new
+            Date(getActiveTransaction(selectedBookForLoanDetails.id)!.loanDate).toLocaleDateString() }}
+        </p>
+        <p class="text-sm text-amber-500 dark:text-amber-400 font-medium">
+          {{ daysSinceLoan(getActiveTransaction(selectedBookForLoanDetails.id)!.loanDate) }} day(s) on loan
+        </p>
+      </div>
+
+      <div
+        v-else
+        class="py-8 text-center text-dimmed"
+      >
+        No active loan found for this book.
+      </div>
     </template>
   </UModal>
 </template>

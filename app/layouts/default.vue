@@ -38,11 +38,6 @@ const links = [[{
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #default="{ collapsed }">
-        <UDashboardSearchButton
-          :collapsed="collapsed"
-          class="bg-transparent ring-default"
-        />
-
         <UNavigationMenu
           :collapsed="collapsed"
           :items="links[0]"

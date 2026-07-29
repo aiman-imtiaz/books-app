@@ -107,12 +107,13 @@ The application will be available at `http://localhost:3000`
 ### Patrons
 - `GET /api/patrons` - List all patrons
 - `POST /api/patrons` - Add a new patron
+- `DELETE /api/patrons/[ID]` - Remove a patron
 
 ### Transactions
 - `GET /api/transactions` - List all transactions
 - `GET /api/transactions/[id]` - Get a specific transaction
 - `POST /api/transactions/loan` - Create a loan event
-- `PATCH /api/transactions/[id].return` - Return a book
+- `PATCH /api/transactions/return/[id]` - Return a book
 - `GET /api/transactions/book/[bookId]` - Get transaction history for a book
 - `GET /api/transactions/patron/[patronId]` - Get transaction history for a patron
 
