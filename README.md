@@ -5,9 +5,9 @@ A library management application built with Nuxt, PostgreSQL, and Drizzle ORM fo
 ## Features
 
 - 📚 Book catalog management (add, remove, view)
-- 👥 Patron management with membership IDs
+- 👥 Patron management with membership IDs (add, remove, view)
 - 📋 Loan and return transaction tracking
-- 📊 Transaction history by book or patron
+- 📊 View Transaction history by book or patron
 
 ## Tech Stack
 

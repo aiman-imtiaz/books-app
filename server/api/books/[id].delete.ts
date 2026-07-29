@@ -8,12 +8,20 @@ const ParamsSchema = z.object({
 
 export default eventHandler(async (event) => {
   const { id } = await getValidatedRouterParams(event, ParamsSchema.parse)
-  // Delete book
-  const deletedBooks = await db.delete(schema.books).where(
-    eq(schema.books.id, id)
-  ).returning()
 
-  const deletedBook = deletedBooks[0]
+  const deletedBook = await db.transaction(async (tx) => {
+    // Remove dependent transactions first to satisfy the FK constraint
+    await tx.delete(schema.transactions).where(
+      eq(schema.transactions.bookId, id)
+    )
+
+    const deletedBooks = await tx.delete(schema.books).where(
+      eq(schema.books.id, id)
+    ).returning()
+
+    return deletedBooks[0]
+  })
+
   if (!deletedBook) {
     throw createError({
       statusCode: 404,

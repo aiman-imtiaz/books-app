@@ -22,6 +22,10 @@ const bookHistoryTransactions = ref<Transaction[]>([])
 const showLoanDetails = ref(false)
 const selectedBookForLoanDetails = ref<Book | null>(null)
 
+const showDeleteConfirm = ref(false)
+const bookToDelete = ref<Book | null>(null)
+const isDeleting = ref(false)
+
 const { data: books, status, refresh } = await useFetch<Book[]>('/api/books', {
   lazy: true
 })
@@ -99,7 +103,8 @@ const getBookActions = (book: Book): DropdownMenuItem[] => {
       icon: 'i-lucide-trash',
       color: 'error',
       onSelect() {
-        deleteBook(book)
+        bookToDelete.value = book
+        showDeleteConfirm.value = true
       }
     }
   ]
@@ -162,15 +167,28 @@ const addBook = async () => {
   }
 }
 
-const deleteBook = async (book: Book) => {
+const deleteBook = async () => {
+  if (!bookToDelete.value) return
+
+  isDeleting.value = true
   try {
-    await $fetch(`/api/books/${book.id}`, { method: 'DELETE' })
-    toast.add({ title: 'Success', description: `Book "${book.title}" removed successfully`, color: 'success' })
+    await $fetch(`/api/books/${bookToDelete.value.id}`, { method: 'DELETE' })
+    toast.add({
+      title: 'Success',
+      description: `Book "${bookToDelete.value.title}" and all associated transactions removed successfully`,
+      color: 'success'
+    })
+    showDeleteConfirm.value = false
+    bookToDelete.value = null
     await refresh()
+    await refreshTransactions()
   }
   catch (error) {
     console.error(error)
     toast.add({ title: 'Error', description: 'Failed to delete book', color: 'error' })
+  }
+  finally {
+    isDeleting.value = false
   }
 }
 
@@ -579,6 +597,44 @@ const returnBook = async (transactionId: number) => {
         class="py-8 text-center text-dimmed"
       >
         No active loan found for this book.
+      </div>
+    </template>
+  </UModal>
+
+  <!-- Delete Book Confirmation Modal -->
+  <UModal
+    v-model:open="showDeleteConfirm"
+    title="Delete Book"
+    description="This action cannot be undone"
+  >
+    <template #body>
+      <p class="text-sm text-default">
+        Are you sure you want to delete
+        <span class="font-semibold text-highlighted">{{ bookToDelete?.title }}</span>?
+        This will also permanently delete all loan history associated with this book.
+      </p>
+
+      <div class="flex gap-2 pt-6">
+        <UButton
+          type="button"
+          color="neutral"
+          variant="soft"
+          class="flex-1 justify-center"
+          :disabled="isDeleting"
+          @click="showDeleteConfirm = false"
+        >
+          Cancel
+        </UButton>
+        <UButton
+          type="button"
+          color="error"
+          class="flex-1 justify-center"
+          :loading="isDeleting"
+          :disabled="isDeleting"
+          @click="deleteBook"
+        >
+          Delete Book
+        </UButton>
       </div>
     </template>
   </UModal>

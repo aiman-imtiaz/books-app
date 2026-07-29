@@ -73,43 +73,65 @@
             <h2 class="text-lg font-semibold">
               Active Loans
             </h2>
-            <p class="text-sm text-muted">
-              {{ activeLoans }} books currently on loan
-            </p>
           </template>
 
-          <UTable
-            :data="activeLoanRows"
-            :columns="loanColumns"
-            :loading="loansLoading"
-            class="w-full"
-            :ui="{
-              base: 'relative overflow-x-auto border border-default rounded-lg',
-              thead: 'bg-elevated/50',
-              th: 'px-4 py-2 text-left text-sm font-semibold',
-              td: 'px-4 py-3 text-sm'
-            }"
-          >
-            <template #loanDate-cell="{ row }">
-              {{ new Date(row.original.loanDate).toLocaleDateString() }}
-            </template>
-
-            <template #daysOnLoan-cell="{ row }">
-              {{ daysSinceLoan(row.original.loanDate) }}
-            </template>
-
-            <template #empty>
-              <div class="flex flex-col items-center justify-center py-12 text-center">
-                <p class="text-muted">
-                  No books currently on loan.
-                </p>
-              </div>
-            </template>
-          </UTable>
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-3xl font-bold">
+                {{ activeLoans }}
+              </p>
+              <p class="text-sm text-muted">
+                Books currently on loan
+              </p>
+            </div>
+            <UButton
+              icon="i-lucide-list"
+              label="View Active Loans"
+              @click="showActiveLoans = true"
+            />
+          </div>
         </UCard>
       </div>
     </template>
   </UDashboardPanel>
+
+  <!-- Active Loans Modal -->
+  <UModal
+    v-model:open="showActiveLoans"
+    title="Active Loans"
+    description="Books currently on loan"
+  >
+    <template #body>
+      <UTable
+        :data="activeLoanRows"
+        :columns="loanColumns"
+        :loading="loansLoading"
+        class="w-full"
+        :ui="{
+          base: 'relative overflow-x-auto border border-default rounded-lg',
+          thead: 'bg-elevated/50',
+          th: 'px-4 py-2 text-left text-sm font-semibold',
+          td: 'px-4 py-3 text-sm'
+        }"
+      >
+        <template #loanDate-cell="{ row }">
+          {{ new Date(row.original.loanDate).toLocaleDateString() }}
+        </template>
+
+        <template #daysOnLoan-cell="{ row }">
+          {{ daysSinceLoan(row.original.loanDate) }}
+        </template>
+
+        <template #empty>
+          <div class="flex flex-col items-center justify-center py-12 text-center">
+            <p class="text-muted">
+              No books currently on loan.
+            </p>
+          </div>
+        </template>
+      </UTable>
+    </template>
+  </UModal>
 </template>
 
 <script setup lang="ts">
@@ -126,6 +148,8 @@ const { data: books } = await useFetch<Book[]>('/api/books', { lazy: true })
 const { data: patrons } = await useFetch<Patron[]>('/api/patrons', { lazy: true })
 const { data: transactions, status: transactionsStatus }
   = await useFetch<Transaction[]>('/api/transactions', { lazy: true })
+
+const showActiveLoans = ref(false)
 
 const bookCount = computed(() => books.value?.length ?? 0)
 const patronCount = computed(() => patrons.value?.length ?? 0)
