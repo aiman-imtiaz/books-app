@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core'
+import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core'
 import { relations } from 'drizzle-orm'
 
 export const books = pgTable('books', {
@@ -27,8 +27,16 @@ export const transactions = pgTable('transactions', {
   createdAt: timestamp('created_at').defaultNow().notNull()
 })
 
+export const ratings = pgTable('ratings', {
+  id: serial('id').primaryKey(),
+  bookId: integer('book_id').notNull().references(() => books.id),
+  patronId: integer('patron_id').notNull().references(() => patrons.id),
+  rating: integer('rating').notNull()
+})
+
 export const booksRelations = relations(books, ({ many }) => ({
-  transactions: many(transactions)
+  transactions: many(transactions),
+  ratings: many(ratings)
 }))
 
 export const patronsRelations = relations(patrons, ({ many }) => ({
@@ -42,6 +50,17 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
   }),
   patron: one(patrons, {
     fields: [transactions.patronId],
+    references: [patrons.id]
+  })
+}))
+
+export const ratingsRelations = relations(ratings, ({ one }) => ({
+  book: one(books, {
+    fields: [ratings.bookId],
+    references: [books.id]
+  }),
+  patron: one(patrons, {
+    fields: [ratings.patronId],
     references: [patrons.id]
   })
 }))
